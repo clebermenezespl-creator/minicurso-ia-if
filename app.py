@@ -90,6 +90,13 @@ st.markdown("""
     padding: 1.6rem;
     text-align: center;
 }
+.nome-aluno {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #e8f0f7;
+    margin-bottom: 0.3rem;
+}
 .media-num {
     font-family: 'Playfair Display', serif;
     font-size: 4rem;
@@ -116,6 +123,11 @@ st.markdown("""
     font-size: 0.88rem;
     color: #a0b4c8;
 }
+.divisor {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    margin: 1rem 0;
+}
 footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
@@ -125,23 +137,29 @@ footer { visibility: hidden; }
 #  FUNÇÕES AUXILIARES
 # ─────────────────────────────────────────
 
+def validar_nome(nome):
+    """Valida o nome do estudante. Retorna mensagem de erro ou None."""
+    if not nome.strip():
+        return "⚠️ Por favor, informe o nome do estudante."
+    if len(nome.strip()) < 3:
+        return "❌ O nome deve ter pelo menos 3 caracteres."
+    return None
+
+
 def validar_nota(texto, numero):
     """
-    Valida uma nota digitada pelo usuário.
+    Valida uma nota digitada.
     Retorna (valor_float, mensagem_erro).
     Se válida, mensagem_erro será None.
     """
     if not texto.strip():
         return None, f"⚠️ Nota {numero} está vazia."
-
     try:
         valor = float(texto.replace(",", "."))
     except ValueError:
         return None, f"❌ Nota {numero}: '{texto}' não é um número válido."
-
     if not (0 <= valor <= 10):
-        return None, f"❌ Nota {numero}: o valor deve estar entre 0 e 10."
-
+        return None, f"❌ Nota {numero}: deve estar entre 0 e 10."
     return valor, None
 
 
@@ -163,7 +181,7 @@ def classificar_media(media):
 # ─────────────────────────────────────────
 
 if "num_notas" not in st.session_state:
-    st.session_state.num_notas = 2  # começa com 2 campos
+    st.session_state.num_notas = 2
 
 
 # ─────────────────────────────────────────
@@ -179,9 +197,20 @@ st.markdown("<div class='subtitulo'>Instituto Federal · Avaliação de Desempen
 # ─────────────────────────────────────────
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.markdown("##### 📝 Insira as notas do aluno")
 
-# Gera os campos dinamicamente conforme o número de notas
+# ── Nome do estudante ──
+st.markdown("##### 👤 Dados do Estudante")
+nome = st.text_input(
+    "Nome completo",
+    placeholder="Ex: João da Silva",
+    key="nome_estudante"
+)
+
+st.markdown("<hr class='divisor'>", unsafe_allow_html=True)
+
+# ── Notas ──
+st.markdown("##### 📝 Notas")
+
 notas_input = []
 for i in range(st.session_state.num_notas):
     valor = st.text_input(
@@ -191,7 +220,7 @@ for i in range(st.session_state.num_notas):
     )
     notas_input.append(valor)
 
-# Botão para adicionar mais um campo de nota
+# Botão para adicionar mais notas
 if st.button("➕ Adicionar nota"):
     st.session_state.num_notas += 1
     st.rerun()
@@ -210,7 +239,8 @@ with col1:
 
 with col2:
     if st.button("🗑️"):
-        # Limpa todos os campos e volta para 2 notas
+        # Limpa nome, notas e reinicia contagem
+        st.session_state.pop("nome_estudante", None)
         for i in range(st.session_state.num_notas + 5):
             st.session_state.pop(f"nota_{i}", None)
         st.session_state.num_notas = 2
@@ -225,6 +255,11 @@ if calcular:
     erros = []
     valores = []
 
+    # Valida o nome
+    erro_nome = validar_nome(nome)
+    if erro_nome:
+        erros.append(erro_nome)
+
     # Valida cada nota individualmente
     for i, entrada in enumerate(notas_input):
         valor, erro = validar_nota(entrada, i + 1)
@@ -233,7 +268,7 @@ if calcular:
         else:
             valores.append(valor)
 
-    # Exibe os erros encontrados
+    # Exibe erros encontrados
     if erros:
         for msg in erros:
             st.error(msg)
@@ -241,15 +276,14 @@ if calcular:
     # Se tudo válido, calcula e exibe o resultado
     elif valores:
         media = sum(valores) / len(valores)
-
         classe, emoji, situacao, cor = classificar_media(media)
-
-        # Detalhe de cada nota
         detalhe = "  ·  ".join([f"N{i+1}: {v:.1f}" for i, v in enumerate(valores)])
+        nome_formatado = nome.strip().title()
 
-        # Card de resultado
+        # Card de resultado com nome do aluno em destaque
         st.markdown(f"""
         <div class='{classe}'>
+            <div class='nome-aluno'>👤 {nome_formatado}</div>
             <div class='media-num' style='color:{cor}'>{media:.2f}</div>
             <div class='situacao' style='color:{cor}'>{emoji} {situacao}</div>
             <div class='detalhe'>{detalhe}</div>
@@ -257,9 +291,9 @@ if calcular:
         </div>
         """, unsafe_allow_html=True)
 
-        # Barra de progresso proporcional à média
+        # Barra de progresso
         st.markdown("<br>", unsafe_allow_html=True)
-        st.progress(media / 10, text=f"Média {media:.2f} / 10.0")
+        st.progress(media / 10, text=f"{nome_formatado} · Média {media:.2f} / 10.0")
 
 
 # ─────────────────────────────────────────
