@@ -1,159 +1,291 @@
-import os
+import streamlit as st
 
 # ─────────────────────────────────────────
-#  UTILITÁRIOS
+#  CONFIGURAÇÃO DA PÁGINA
 # ─────────────────────────────────────────
-
-def limpar_tela():
-    """Limpa o terminal em qualquer sistema operacional."""
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-
-def cabecalho():
-    """Exibe o cabeçalho do programa."""
-    print("=" * 50)
-    print("        🎓  CALCULADORA DE NOTAS DO IF")
-    print("=" * 50)
-
-
-def criterios():
-    """Exibe os critérios de avaliação."""
-    print()
-    print("  📋 Critérios de avaliação:")
-    print("  ✅  Aprovado      →  Média ≥ 6.0")
-    print("  ⚠️   Recuperação  →  4.0 ≤ Média < 6.0")
-    print("  ❌  Reprovado     →  Média < 4.0")
-    print()
-
+st.set_page_config(
+    page_title="Calculadora de Notas do IF",
+    page_icon="🎓",
+    layout="centered"
+)
 
 # ─────────────────────────────────────────
-#  LEITURA E VALIDAÇÃO DE NOTAS
+#  ESTILO VISUAL
+# ─────────────────────────────────────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lato:wght@300;400;700&display=swap');
+
+.stApp {
+    background: linear-gradient(160deg, #1b2838 0%, #0d1b2a 100%);
+    font-family: 'Lato', sans-serif;
+}
+.titulo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #f0c040;
+    text-align: center;
+    margin-bottom: 0.1rem;
+}
+.subtitulo {
+    text-align: center;
+    color: #7a90a4;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+}
+.card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 1.6rem 2rem;
+    margin-bottom: 1.2rem;
+}
+.stTextInput > label {
+    color: #a0b4c8 !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+}
+.stTextInput > div > div > input {
+    background: #0d1b2a !important;
+    border: 1px solid #2a3f55 !important;
+    border-radius: 10px !important;
+    color: #e8f0f7 !important;
+    font-size: 1.05rem !important;
+}
+.stTextInput > div > div > input:focus {
+    border-color: #f0c040 !important;
+    box-shadow: 0 0 0 2px rgba(240,192,64,0.2) !important;
+}
+.stButton > button {
+    font-family: 'Playfair Display', serif !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+    border: none !important;
+    width: 100% !important;
+    transition: all 0.2s ease !important;
+}
+.res-aprovado {
+    background: linear-gradient(135deg, #0a2e1a, #0d3d20);
+    border: 1px solid #22c55e;
+    border-radius: 16px;
+    padding: 1.6rem;
+    text-align: center;
+}
+.res-recuperacao {
+    background: linear-gradient(135deg, #2e1f00, #3d2a00);
+    border: 1px solid #f59e0b;
+    border-radius: 16px;
+    padding: 1.6rem;
+    text-align: center;
+}
+.res-reprovado {
+    background: linear-gradient(135deg, #2e0a0a, #3d0d0d);
+    border: 1px solid #ef4444;
+    border-radius: 16px;
+    padding: 1.6rem;
+    text-align: center;
+}
+.media-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1;
+}
+.situacao {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+}
+.detalhe {
+    font-size: 0.82rem;
+    color: #7a90a4;
+    margin-top: 0.7rem;
+}
+.criterio {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.88rem;
+    color: #a0b4c8;
+}
+footer { visibility: hidden; }
+</style>
+""", unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────
+#  FUNÇÕES AUXILIARES
 # ─────────────────────────────────────────
 
-def ler_nota(numero):
+def validar_nota(texto, numero):
     """
-    Solicita uma nota ao usuário com validação completa.
-    Aceita vírgula ou ponto como separador decimal.
-    Retorna um float entre 0 e 10.
+    Valida uma nota digitada pelo usuário.
+    Retorna (valor_float, mensagem_erro).
+    Se válida, mensagem_erro será None.
     """
-    while True:
-        entrada = input(f"  Nota {numero}: ").strip().replace(",", ".")
+    if not texto.strip():
+        return None, f"⚠️ Nota {numero} está vazia."
 
-        # Validação: campo vazio
-        if not entrada:
-            print("  ❌ Erro: campo vazio. Digite um valor.\n")
-            continue
+    try:
+        valor = float(texto.replace(",", "."))
+    except ValueError:
+        return None, f"❌ Nota {numero}: '{texto}' não é um número válido."
 
-        # Validação: valor numérico
-        try:
-            valor = float(entrada)
-        except ValueError:
-            print(f"  ❌ Erro: '{entrada}' não é um número válido. Ex: 7.5\n")
-            continue
+    if not (0 <= valor <= 10):
+        return None, f"❌ Nota {numero}: o valor deve estar entre 0 e 10."
 
-        # Validação: intervalo 0–10
-        if not (0 <= valor <= 10):
-            print("  ❌ Erro: a nota deve estar entre 0 e 10.\n")
-            continue
-
-        return valor
+    return valor, None
 
 
-def ler_quantidade_notas():
+def classificar_media(media):
     """
-    Pergunta ao usuário quantas notas deseja inserir.
-    Aceita apenas inteiros ≥ 2.
+    Retorna (classe_css, emoji, texto_situacao, cor_hex)
+    com base na média calculada.
     """
-    while True:
-        entrada = input("  Quantas notas deseja inserir? (mínimo 2): ").strip()
-        try:
-            qtd = int(entrada)
-            if qtd >= 2:
-                return qtd
-            else:
-                print("  ❌ Erro: insira pelo menos 2 notas.\n")
-        except ValueError:
-            print(f"  ❌ Erro: '{entrada}' não é um número inteiro válido.\n")
-
-
-# ─────────────────────────────────────────
-#  EXIBIÇÃO DO RESULTADO
-# ─────────────────────────────────────────
-
-def barra_progresso(media):
-    """Gera uma barra de progresso visual no terminal."""
-    blocos = int(media)
-    barra = "█" * blocos + "░" * (10 - blocos)
-    return f"[{barra}] {media:.2f}/10.0"
-
-
-def exibir_resultado(notas, media):
-    """Exibe o resultado completo com notas, média, barra e situação."""
-    print()
-    print("-" * 50)
-    print("              📊  RESULTADO FINAL")
-    print("-" * 50)
-
-    # Lista de notas inseridas
-    for i, n in enumerate(notas, start=1):
-        print(f"  Nota {i:<5}: {n:.1f}")
-
-    print()
-    print(f"  Média     : {media:.2f}")
-    print(f"  Notas     : {len(notas)} inserida(s)")
-    print()
-
-    # Barra de progresso
-    print(f"  {barra_progresso(media)}")
-    print()
-
-    # Situação do aluno
     if media >= 6.0:
-        print("  ✅  SITUAÇÃO: APROVADO")
+        return "res-aprovado", "✅", "APROVADO", "#22c55e"
     elif media >= 4.0:
-        print("  ⚠️   SITUAÇÃO: RECUPERAÇÃO")
+        return "res-recuperacao", "⚠️", "RECUPERAÇÃO", "#f59e0b"
     else:
-        print("  ❌  SITUAÇÃO: REPROVADO")
-
-    print("-" * 50)
+        return "res-reprovado", "❌", "REPROVADO", "#ef4444"
 
 
 # ─────────────────────────────────────────
-#  FLUXO PRINCIPAL
+#  ESTADO DA SESSÃO
 # ─────────────────────────────────────────
 
-def main():
-    while True:
-        limpar_tela()
-        cabecalho()
-        criterios()
-
-        # Pergunta quantas notas o usuário quer inserir
-        qtd = ler_quantidade_notas()
-        print()
-
-        # Coleta todas as notas
-        notas = []
-        for i in range(1, qtd + 1):
-            nota = ler_nota(i)
-            notas.append(nota)
-
-        # Calcula a média aritmética simples
-        media = sum(notas) / len(notas)
-
-        # Exibe o resultado
-        exibir_resultado(notas, media)
-
-        # Pergunta se deseja calcular novamente
-        print()
-        opcao = input("  Deseja calcular novamente? (s/n): ").strip().lower()
-        if opcao != 's':
-            print()
-            print("  👋 Até logo!")
-            print("=" * 50)
-            print()
-            break
+if "num_notas" not in st.session_state:
+    st.session_state.num_notas = 2  # começa com 2 campos
 
 
-if __name__ == "__main__":
-    main()
+# ─────────────────────────────────────────
+#  CABEÇALHO
+# ─────────────────────────────────────────
+
+st.markdown("<div class='titulo'>🎓 Calculadora de Notas</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitulo'>Instituto Federal · Avaliação de Desempenho</div>", unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────
+#  CARD DE ENTRADA
+# ─────────────────────────────────────────
+
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.markdown("##### 📝 Insira as notas do aluno")
+
+# Gera os campos dinamicamente conforme o número de notas
+notas_input = []
+for i in range(st.session_state.num_notas):
+    valor = st.text_input(
+        f"Nota {i + 1}",
+        placeholder="Ex: 7.5",
+        key=f"nota_{i}"
+    )
+    notas_input.append(valor)
+
+# Botão para adicionar mais um campo de nota
+if st.button("➕ Adicionar nota"):
+    st.session_state.num_notas += 1
+    st.rerun()
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────
+#  BOTÕES CALCULAR e LIMPAR
+# ─────────────────────────────────────────
+
+col1, col2 = st.columns([4, 1])
+
+with col1:
+    calcular = st.button("🎯 Calcular Média")
+
+with col2:
+    if st.button("🗑️"):
+        # Limpa todos os campos e volta para 2 notas
+        for i in range(st.session_state.num_notas + 5):
+            st.session_state.pop(f"nota_{i}", None)
+        st.session_state.num_notas = 2
+        st.rerun()
+
+
+# ─────────────────────────────────────────
+#  LÓGICA DE CÁLCULO E EXIBIÇÃO
+# ─────────────────────────────────────────
+
+if calcular:
+    erros = []
+    valores = []
+
+    # Valida cada nota individualmente
+    for i, entrada in enumerate(notas_input):
+        valor, erro = validar_nota(entrada, i + 1)
+        if erro:
+            erros.append(erro)
+        else:
+            valores.append(valor)
+
+    # Exibe os erros encontrados
+    if erros:
+        for msg in erros:
+            st.error(msg)
+
+    # Se tudo válido, calcula e exibe o resultado
+    elif valores:
+        media = sum(valores) / len(valores)
+
+        classe, emoji, situacao, cor = classificar_media(media)
+
+        # Detalhe de cada nota
+        detalhe = "  ·  ".join([f"N{i+1}: {v:.1f}" for i, v in enumerate(valores)])
+
+        # Card de resultado
+        st.markdown(f"""
+        <div class='{classe}'>
+            <div class='media-num' style='color:{cor}'>{media:.2f}</div>
+            <div class='situacao' style='color:{cor}'>{emoji} {situacao}</div>
+            <div class='detalhe'>{detalhe}</div>
+            <div class='detalhe'>{len(valores)} nota(s) considerada(s)</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Barra de progresso proporcional à média
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.progress(media / 10, text=f"Média {media:.2f} / 10.0")
+
+
+# ─────────────────────────────────────────
+#  TABELA DE CRITÉRIOS
+# ─────────────────────────────────────────
+
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("""
+<div class='card'>
+    <p style='color:#7a90a4;font-size:0.78rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:0.8rem'>
+        📋 Critérios de avaliação
+    </p>
+    <div class='criterio'>
+        <span>✅</span>
+        <span><strong style='color:#22c55e'>Aprovado</strong> — Média ≥ 6.0</span>
+    </div>
+    <div class='criterio'>
+        <span>⚠️</span>
+        <span><strong style='color:#f59e0b'>Recuperação</strong> — 4.0 ≤ Média &lt; 6.0</span>
+    </div>
+    <div class='criterio' style='border-bottom:none'>
+        <span>❌</span>
+        <span><strong style='color:#ef4444'>Reprovado</strong> — Média &lt; 4.0</span>
+    </div>
+</div>
+<p style='text-align:center;color:#2a3f55;font-size:0.75rem;margin-top:1rem'>
+    Calculadora de Notas · Instituto Federal
+</p>
+""", unsafe_allow_html=True)
