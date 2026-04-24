@@ -1,4 +1,6 @@
 import streamlit as st
+import plotly.graph_objects as go
+import plotly.express as px
 
 # ─────────────────────────────────────────
 #  CONFIGURAÇÃO DA PÁGINA
@@ -128,9 +130,24 @@ st.markdown("""
     border-top: 1px solid rgba(255,255,255,0.07);
     margin: 1rem 0;
 }
+.grafico-titulo {
+    color: #7a90a4;
+    font-size: 0.78rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
 footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
+
+# ─────────────────────────────────────────
+#  CONFIGURAÇÃO PADRÃO DOS GRÁFICOS PLOTLY
+# ─────────────────────────────────────────
+PLOT_BG   = "rgba(0,0,0,0)"
+PAPER_BG  = "rgba(0,0,0,0)"
+FONT_COLOR = "#a0b4c8"
+GRID_COLOR = "rgba(255,255,255,0.06)"
 
 
 # ─────────────────────────────────────────
@@ -138,7 +155,7 @@ footer { visibility: hidden; }
 # ─────────────────────────────────────────
 
 def validar_nome(nome):
-    """Valida o nome do estudante. Retorna mensagem de erro ou None."""
+    """Valida o nome do estudante."""
     if not nome.strip():
         return "⚠️ Por favor, informe o nome do estudante."
     if len(nome.strip()) < 3:
@@ -147,11 +164,7 @@ def validar_nome(nome):
 
 
 def validar_nota(texto, numero):
-    """
-    Valida uma nota digitada.
-    Retorna (valor_float, mensagem_erro).
-    Se válida, mensagem_erro será None.
-    """
+    """Valida uma nota digitada. Retorna (valor_float, erro)."""
     if not texto.strip():
         return None, f"⚠️ Nota {numero} está vazia."
     try:
@@ -164,16 +177,138 @@ def validar_nota(texto, numero):
 
 
 def classificar_media(media):
-    """
-    Retorna (classe_css, emoji, texto_situacao, cor_hex)
-    com base na média calculada.
-    """
+    """Retorna (classe_css, emoji, situacao, cor_hex)."""
     if media >= 6.0:
         return "res-aprovado", "✅", "APROVADO", "#22c55e"
     elif media >= 4.0:
         return "res-recuperacao", "⚠️", "RECUPERAÇÃO", "#f59e0b"
     else:
         return "res-reprovado", "❌", "REPROVADO", "#ef4444"
+
+
+def cor_por_nota(v):
+    """Retorna a cor de uma barra conforme o valor da nota."""
+    if v >= 6.0:
+        return "#22c55e"
+    elif v >= 4.0:
+        return "#f59e0b"
+    return "#ef4444"
+
+
+# ─────────────────────────────────────────
+#  FUNÇÕES DE GRÁFICO
+# ─────────────────────────────────────────
+
+def grafico_barras(valores):
+    """Gráfico de barras com uma barra por nota, colorida pela situação."""
+    labels = [f"Nota {i+1}" for i in range(len(valores))]
+    cores  = [cor_por_nota(v) for v in valores]
+
+    fig = go.Figure(go.Bar(
+        x=labels,
+        y=valores,
+        marker_color=cores,
+        marker_line_color="rgba(255,255,255,0.1)",
+        marker_line_width=1,
+        text=[f"{v:.1f}" for v in valores],
+        textposition="outside",
+        textfont=dict(color="#e8f0f7", size=13),
+    ))
+
+    # Linha de aprovação (6.0) e recuperação (4.0)
+    fig.add_hline(y=6.0, line_dash="dash", line_color="#22c55e",
+                  annotation_text="Aprovação (6.0)", annotation_font_color="#22c55e",
+                  annotation_position="top right")
+    fig.add_hline(y=4.0, line_dash="dash", line_color="#f59e0b",
+                  annotation_text="Recuperação (4.0)", annotation_font_color="#f59e0b",
+                  annotation_position="bottom right")
+
+    fig.update_layout(
+        plot_bgcolor=PLOT_BG, paper_bgcolor=PAPER_BG,
+        font=dict(color=FONT_COLOR, family="Lato"),
+        margin=dict(t=20, b=10, l=10, r=10),
+        yaxis=dict(range=[0, 11], gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
+        xaxis=dict(tickfont=dict(color=FONT_COLOR)),
+        showlegend=False,
+        height=300,
+    )
+    return fig
+
+
+def grafico_gauge(media, cor):
+    """Velocímetro mostrando a média do aluno de 0 a 10."""
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=media,
+        number=dict(font=dict(color=cor, size=40, family="Playfair Display"), suffix=""),
+        gauge=dict(
+            axis=dict(
+                range=[0, 10],
+                tickwidth=1,
+                tickcolor=FONT_COLOR,
+                tickfont=dict(color=FONT_COLOR),
+            ),
+            bar=dict(color=cor, thickness=0.25),
+            bgcolor="rgba(255,255,255,0.03)",
+            borderwidth=0,
+            steps=[
+                dict(range=[0,   4.0], color="rgba(239,68,68,0.15)"),
+                dict(range=[4.0, 6.0], color="rgba(245,158,11,0.15)"),
+                dict(range=[6.0, 10],  color="rgba(34,197,94,0.15)"),
+            ],
+            threshold=dict(
+                line=dict(color=cor, width=3),
+                thickness=0.75,
+                value=media,
+            ),
+        ),
+    ))
+    fig.update_layout(
+        plot_bgcolor=PLOT_BG, paper_bgcolor=PAPER_BG,
+        font=dict(color=FONT_COLOR, family="Lato"),
+        margin=dict(t=20, b=10, l=20, r=20),
+        height=230,
+    )
+    return fig
+
+
+def grafico_linha(valores):
+    """Gráfico de linha mostrando a evolução das notas ao longo das avaliações."""
+    labels = [f"Nota {i+1}" for i in range(len(valores))]
+    media  = sum(valores) / len(valores)
+
+    fig = go.Figure()
+
+    # Área sombreada abaixo da linha
+    fig.add_trace(go.Scatter(
+        x=labels, y=valores,
+        fill="tozeroy",
+        fillcolor="rgba(240,192,64,0.07)",
+        line=dict(color="#f0c040", width=2.5),
+        mode="lines+markers",
+        marker=dict(size=9, color=[cor_por_nota(v) for v in valores],
+                    line=dict(color="#0d1b2a", width=2)),
+        text=[f"{v:.1f}" for v in valores],
+        textposition="top center",
+        textfont=dict(color="#e8f0f7"),
+    ))
+
+    # Linha da média
+    fig.add_hline(y=media, line_dash="dot", line_color="#f0c040", line_width=1.5,
+                  annotation_text=f"Média: {media:.2f}",
+                  annotation_font_color="#f0c040",
+                  annotation_position="top left")
+
+    fig.update_layout(
+        plot_bgcolor=PLOT_BG, paper_bgcolor=PAPER_BG,
+        font=dict(color=FONT_COLOR, family="Lato"),
+        margin=dict(t=20, b=10, l=10, r=10),
+        yaxis=dict(range=[0, 11], gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
+        xaxis=dict(tickfont=dict(color=FONT_COLOR), gridcolor=GRID_COLOR),
+        showlegend=False,
+        height=270,
+    )
+    return fig
 
 
 # ─────────────────────────────────────────
@@ -198,7 +333,6 @@ st.markdown("<div class='subtitulo'>Instituto Federal · Avaliação de Desempen
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 
-# ── Nome do estudante ──
 st.markdown("##### 👤 Dados do Estudante")
 nome = st.text_input(
     "Nome completo",
@@ -207,20 +341,17 @@ nome = st.text_input(
 )
 
 st.markdown("<hr class='divisor'>", unsafe_allow_html=True)
-
-# ── Notas ──
 st.markdown("##### 📝 Notas")
 
 notas_input = []
 for i in range(st.session_state.num_notas):
-    valor = st.text_input(
+    v = st.text_input(
         f"Nota {i + 1}",
         placeholder="Ex: 7.5",
         key=f"nota_{i}"
     )
-    notas_input.append(valor)
+    notas_input.append(v)
 
-# Botão para adicionar mais notas
 if st.button("➕ Adicionar nota"):
     st.session_state.num_notas += 1
     st.rerun()
@@ -233,13 +364,10 @@ st.markdown("</div>", unsafe_allow_html=True)
 # ─────────────────────────────────────────
 
 col1, col2 = st.columns([4, 1])
-
 with col1:
     calcular = st.button("🎯 Calcular Média")
-
 with col2:
     if st.button("🗑️"):
-        # Limpa nome, notas e reinicia contagem
         st.session_state.pop("nome_estudante", None)
         for i in range(st.session_state.num_notas + 5):
             st.session_state.pop(f"nota_{i}", None)
@@ -252,15 +380,13 @@ with col2:
 # ─────────────────────────────────────────
 
 if calcular:
-    erros = []
+    erros  = []
     valores = []
 
-    # Valida o nome
     erro_nome = validar_nome(nome)
     if erro_nome:
         erros.append(erro_nome)
 
-    # Valida cada nota individualmente
     for i, entrada in enumerate(notas_input):
         valor, erro = validar_nota(entrada, i + 1)
         if erro:
@@ -268,22 +394,20 @@ if calcular:
         else:
             valores.append(valor)
 
-    # Exibe erros encontrados
     if erros:
         for msg in erros:
             st.error(msg)
 
-    # Se tudo válido, calcula e exibe o resultado
     elif valores:
         media = sum(valores) / len(valores)
         classe, emoji, situacao, cor = classificar_media(media)
         detalhe = "  ·  ".join([f"N{i+1}: {v:.1f}" for i, v in enumerate(valores)])
-        nome_formatado = nome.strip().title()
+        nome_fmt = nome.strip().title()
 
-        # Card de resultado com nome do aluno em destaque
+        # ── Card de resultado ──
         st.markdown(f"""
         <div class='{classe}'>
-            <div class='nome-aluno'>👤 {nome_formatado}</div>
+            <div class='nome-aluno'>👤 {nome_fmt}</div>
             <div class='media-num' style='color:{cor}'>{media:.2f}</div>
             <div class='situacao' style='color:{cor}'>{emoji} {situacao}</div>
             <div class='detalhe'>{detalhe}</div>
@@ -291,9 +415,26 @@ if calcular:
         </div>
         """, unsafe_allow_html=True)
 
-        # Barra de progresso
         st.markdown("<br>", unsafe_allow_html=True)
-        st.progress(media / 10, text=f"{nome_formatado} · Média {media:.2f} / 10.0")
+
+        # ── Gráfico Gauge (velocímetro da média) ──
+        st.markdown("<p class='grafico-titulo'>🎯 Velocímetro da Média</p>", unsafe_allow_html=True)
+        st.plotly_chart(grafico_gauge(media, cor), use_container_width=True)
+
+        # ── Gráficos lado a lado: Barras + Linha ──
+        col_bar, col_lin = st.columns(2)
+
+        with col_bar:
+            st.markdown("<p class='grafico-titulo'>📊 Notas por Avaliação</p>", unsafe_allow_html=True)
+            st.plotly_chart(grafico_barras(valores), use_container_width=True)
+
+        with col_lin:
+            st.markdown("<p class='grafico-titulo'>📈 Evolução das Notas</p>", unsafe_allow_html=True)
+            st.plotly_chart(grafico_linha(valores), use_container_width=True)
+
+        # ── Barra de progresso ──
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.progress(media / 10, text=f"{nome_fmt} · Média {media:.2f} / 10.0")
 
 
 # ─────────────────────────────────────────
