@@ -1,7 +1,4 @@
 import streamlit as st
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
 
 # ─────────────────────────────────────────
 #  CONFIGURAÇÃO DA PÁGINA
@@ -19,119 +16,58 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lato:wght@300;400;700&display=swap');
 
-.stApp {
-    background: linear-gradient(160deg, #1b2838 0%, #0d1b2a 100%);
-    font-family: 'Lato', sans-serif;
-}
-.titulo {
-    font-family: 'Playfair Display', serif;
-    font-size: 2.5rem;
-    font-weight: 900;
-    color: #f0c040;
-    text-align: center;
-    margin-bottom: 0.1rem;
-}
-.subtitulo {
-    text-align: center;
-    color: #7a90a4;
-    font-size: 0.9rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 2rem;
-}
-.card {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px;
-    padding: 1.6rem 2rem;
-    margin-bottom: 1.2rem;
-}
-.stTextInput > label {
-    color: #a0b4c8 !important;
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 1px !important;
-    text-transform: uppercase !important;
-}
-.stTextInput > div > div > input {
-    background: #0d1b2a !important;
-    border: 1px solid #2a3f55 !important;
-    border-radius: 10px !important;
-    color: #e8f0f7 !important;
-    font-size: 1.05rem !important;
-}
-.stTextInput > div > div > input:focus {
-    border-color: #f0c040 !important;
-    box-shadow: 0 0 0 2px rgba(240,192,64,0.2) !important;
-}
-.stButton > button {
-    font-family: 'Playfair Display', serif !important;
-    font-weight: 700 !important;
-    border-radius: 10px !important;
-    border: none !important;
-    width: 100% !important;
-    transition: all 0.2s ease !important;
-}
-.res-aprovado {
-    background: linear-gradient(135deg, #0a2e1a, #0d3d20);
-    border: 1px solid #22c55e;
-    border-radius: 16px;
-    padding: 1.6rem;
-    text-align: center;
-}
-.res-recuperacao {
-    background: linear-gradient(135deg, #2e1f00, #3d2a00);
-    border: 1px solid #f59e0b;
-    border-radius: 16px;
-    padding: 1.6rem;
-    text-align: center;
-}
-.res-reprovado {
-    background: linear-gradient(135deg, #2e0a0a, #3d0d0d);
-    border: 1px solid #ef4444;
-    border-radius: 16px;
-    padding: 1.6rem;
-    text-align: center;
-}
-.nome-aluno {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #e8f0f7;
-    margin-bottom: 0.3rem;
-}
-.media-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 4rem;
-    font-weight: 900;
-    line-height: 1;
-}
-.situacao {
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-top: 0.3rem;
-}
-.detalhe {
-    font-size: 0.82rem;
-    color: #7a90a4;
-    margin-top: 0.7rem;
-}
-.criterio {
-    display: flex;
-    gap: 0.6rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    font-size: 0.88rem;
-    color: #a0b4c8;
-}
-.divisor {
-    border: none;
-    border-top: 1px solid rgba(255,255,255,0.07);
-    margin: 1rem 0;
-}
-footer { visibility: hidden; }
+.stApp { background: linear-gradient(160deg,#1b2838 0%,#0d1b2a 100%); font-family:'Lato',sans-serif; }
+
+.titulo { font-family:'Playfair Display',serif; font-size:2.5rem; font-weight:900; color:#f0c040; text-align:center; margin-bottom:.1rem; }
+.subtitulo { text-align:center; color:#7a90a4; font-size:.9rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:2rem; }
+
+.card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:1.6rem 2rem; margin-bottom:1.2rem; }
+
+.stTextInput>label { color:#a0b4c8!important; font-size:.82rem!important; font-weight:700!important; letter-spacing:1px!important; text-transform:uppercase!important; }
+.stTextInput>div>div>input { background:#0d1b2a!important; border:1px solid #2a3f55!important; border-radius:10px!important; color:#e8f0f7!important; font-size:1.05rem!important; }
+.stTextInput>div>div>input:focus { border-color:#f0c040!important; box-shadow:0 0 0 2px rgba(240,192,64,.2)!important; }
+
+.stButton>button { font-family:'Playfair Display',serif!important; font-weight:700!important; border-radius:10px!important; border:none!important; width:100%!important; transition:all .2s ease!important; }
+
+.res-aprovado   { background:linear-gradient(135deg,#0a2e1a,#0d3d20); border:1px solid #22c55e; border-radius:16px; padding:1.6rem; text-align:center; }
+.res-recuperacao{ background:linear-gradient(135deg,#2e1f00,#3d2a00); border:1px solid #f59e0b; border-radius:16px; padding:1.6rem; text-align:center; }
+.res-reprovado  { background:linear-gradient(135deg,#2e0a0a,#3d0d0d); border:1px solid #ef4444; border-radius:16px; padding:1.6rem; text-align:center; }
+
+.nome-aluno { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; color:#e8f0f7; margin-bottom:.3rem; }
+.media-num  { font-family:'Playfair Display',serif; font-size:4rem; font-weight:900; line-height:1; }
+.situacao   { font-size:1.1rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-top:.3rem; }
+.detalhe    { font-size:.82rem; color:#7a90a4; margin-top:.7rem; }
+
+.criterio   { display:flex; gap:.6rem; padding:.5rem 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:.88rem; color:#a0b4c8; }
+.divisor    { border:none; border-top:1px solid rgba(255,255,255,.07); margin:1rem 0; }
+
+/* ── Gráficos HTML ── */
+.chart-wrap { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:1.2rem 1.4rem; margin-top:.8rem; }
+.chart-title{ color:#7a90a4; font-size:.75rem; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1rem; }
+
+/* Barras */
+.bar-row    { display:flex; align-items:flex-end; gap:10px; height:140px; padding-bottom:4px; }
+.bar-col    { display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; }
+.bar        { width:100%; border-radius:6px 6px 0 0; transition:height .5s ease; position:relative; min-height:4px; }
+.bar-val    { font-size:.8rem; font-weight:700; color:#e8f0f7; margin-bottom:4px; }
+.bar-label  { font-size:.72rem; color:#7a90a4; margin-top:6px; }
+.bar-axis   { border-top:1px solid rgba(255,255,255,.1); margin-top:4px; }
+
+/* Linha de referência */
+.ref-lines  { position:relative; }
+
+/* Gauge */
+.gauge-wrap { display:flex; flex-direction:column; align-items:center; }
+.gauge-bar  { width:100%; height:22px; border-radius:11px; background:linear-gradient(to right,#ef4444 0%,#ef4444 40%,#f59e0b 40%,#f59e0b 60%,#22c55e 60%,#22c55e 100%); position:relative; margin:8px 0; }
+.gauge-ptr  { position:absolute; top:-6px; width:4px; height:34px; background:#fff; border-radius:2px; transform:translateX(-50%); box-shadow:0 0 8px rgba(255,255,255,.5); transition:left .6s ease; }
+.gauge-labels { display:flex; justify-content:space-between; font-size:.72rem; color:#7a90a4; width:100%; }
+.gauge-val  { font-family:'Playfair Display',serif; font-size:2.8rem; font-weight:900; margin-top:.4rem; }
+
+/* Linha/evolução */
+.linechart  { position:relative; height:120px; width:100%; }
+.lc-svg     { width:100%; height:100%; overflow:visible; }
+
+footer { visibility:hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -141,7 +77,6 @@ footer { visibility: hidden; }
 # ─────────────────────────────────────────
 
 def validar_nome(nome):
-    """Valida o nome do estudante."""
     if not nome.strip():
         return "⚠️ Por favor, informe o nome do estudante."
     if len(nome.strip()) < 3:
@@ -150,7 +85,6 @@ def validar_nome(nome):
 
 
 def validar_nota(texto, numero):
-    """Valida uma nota digitada. Retorna (valor_float, erro)."""
     if not texto.strip():
         return None, f"⚠️ Nota {numero} está vazia."
     try:
@@ -163,7 +97,6 @@ def validar_nota(texto, numero):
 
 
 def classificar_media(media):
-    """Retorna (classe_css, emoji, situacao, cor_hex)."""
     if media >= 6.0:
         return "res-aprovado", "✅", "APROVADO", "#22c55e"
     elif media >= 4.0:
@@ -172,159 +105,125 @@ def classificar_media(media):
         return "res-reprovado", "❌", "REPROVADO", "#ef4444"
 
 
-def cor_por_nota(v):
-    """Retorna cor conforme situação da nota."""
-    if v >= 6.0:
-        return "#22c55e"
-    elif v >= 4.0:
-        return "#f59e0b"
+def cor_nota(v):
+    if v >= 6.0: return "#22c55e"
+    if v >= 4.0: return "#f59e0b"
     return "#ef4444"
 
 
 # ─────────────────────────────────────────
-#  FUNÇÕES DE GRÁFICO (Matplotlib)
+#  FUNÇÕES DE GRÁFICO (HTML puro)
 # ─────────────────────────────────────────
 
-BG = "#0d1b2a"
-TEXT_COLOR = "#a0b4c8"
+def html_barras(valores):
+    """Gráfico de barras em HTML/CSS — sem dependências."""
+    max_val = 10
+    colunas = ""
+    for i, v in enumerate(valores):
+        h_pct = (v / max_val) * 100
+        cor   = cor_nota(v)
+        colunas += f"""
+        <div class="bar-col">
+            <div class="bar-val">{v:.1f}</div>
+            <div class="bar" style="height:{h_pct}%;background:{cor};opacity:.85;"></div>
+            <div class="bar-label">N{i+1}</div>
+        </div>"""
+
+    # linhas de referência como sobreposição
+    linha_apr = (6 / max_val) * 100
+    linha_rec = (4 / max_val) * 100
+
+    return f"""
+    <div class="chart-wrap">
+        <div class="chart-title">📊 Notas por Avaliação</div>
+        <div style="position:relative;">
+            <div style="position:absolute;bottom:{linha_apr}%;left:0;right:0;
+                        border-top:1px dashed #22c55e;opacity:.7;z-index:1;">
+                <span style="font-size:.65rem;color:#22c55e;padding-left:4px;">6.0</span>
+            </div>
+            <div style="position:absolute;bottom:{linha_rec}%;left:0;right:0;
+                        border-top:1px dashed #f59e0b;opacity:.7;z-index:1;">
+                <span style="font-size:.65rem;color:#f59e0b;padding-left:4px;">4.0</span>
+            </div>
+            <div class="bar-row">{colunas}</div>
+        </div>
+        <div class="bar-axis"></div>
+    </div>"""
 
 
-def grafico_barras(valores):
-    """Gráfico de barras com uma barra por nota."""
-    labels = [f"Nota {i+1}" for i in range(len(valores))]
-    cores  = [cor_por_nota(v) for v in valores]
-
-    fig, ax = plt.subplots(figsize=(5, 3.2))
-    fig.patch.set_facecolor(BG)
-    ax.set_facecolor(BG)
-
-    bars = ax.bar(labels, valores, color=cores, width=0.5,
-                  edgecolor="rgba(255,255,255,0.1)", linewidth=0.8)
-
-    # Valor em cima de cada barra
-    for bar, v in zip(bars, valores):
-        ax.text(bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 0.2,
-                f"{v:.1f}", ha="center", va="bottom",
-                color="#e8f0f7", fontsize=10, fontweight="bold")
-
-    # Linhas de referência
-    ax.axhline(6.0, color="#22c55e", linestyle="--", linewidth=1.2, alpha=0.7)
-    ax.axhline(4.0, color="#f59e0b", linestyle="--", linewidth=1.2, alpha=0.7)
-    ax.text(len(valores) - 0.5, 6.15, "Aprovação", color="#22c55e", fontsize=7.5, ha="right")
-    ax.text(len(valores) - 0.5, 4.15, "Recuperação", color="#f59e0b", fontsize=7.5, ha="right")
-
-    ax.set_ylim(0, 11.5)
-    ax.set_yticks(range(0, 11))
-    ax.tick_params(colors=TEXT_COLOR, labelsize=9)
-    ax.spines[:].set_visible(False)
-    ax.yaxis.grid(True, color="rgba(255,255,255,0.06)", linewidth=0.7)
-    ax.set_axisbelow(True)
-    for label in ax.get_xticklabels() + ax.get_yticklabels():
-        label.set_color(TEXT_COLOR)
-
-    plt.tight_layout()
-    return fig
+def html_gauge(media, cor):
+    """Barra de progresso estilizada como gauge."""
+    pct = (media / 10) * 100
+    return f"""
+    <div class="chart-wrap">
+        <div class="chart-title">🎯 Velocímetro da Média</div>
+        <div class="gauge-wrap">
+            <div style="position:relative;width:100%;">
+                <div class="gauge-bar"></div>
+                <div class="gauge-ptr" style="left:{pct}%;"></div>
+            </div>
+            <div class="gauge-labels">
+                <span>0 — Reprovado</span>
+                <span>4 — Recuperação</span>
+                <span>6 — Aprovado</span>
+                <span>10</span>
+            </div>
+            <div class="gauge-val" style="color:{cor};">{media:.2f}</div>
+        </div>
+    </div>"""
 
 
-def grafico_linha(valores, media):
-    """Gráfico de linha mostrando a evolução das notas."""
-    labels = [f"Nota {i+1}" for i in range(len(valores))]
-    xs = range(len(valores))
+def html_linha(valores, media):
+    """Gráfico de linha com SVG inline."""
+    n   = len(valores)
+    W, H = 400, 120
+    pad  = 20
 
-    fig, ax = plt.subplots(figsize=(5, 3.2))
-    fig.patch.set_facecolor(BG)
-    ax.set_facecolor(BG)
-
-    # Área preenchida
-    ax.fill_between(xs, valores, alpha=0.12, color="#f0c040")
+    # Coordenadas dos pontos
+    def px(i): return pad + i * (W - 2*pad) / max(n - 1, 1)
+    def py(v): return H - pad - (v / 10) * (H - 2*pad)
 
     # Linha principal
-    ax.plot(xs, valores, color="#f0c040", linewidth=2.2, zorder=3)
+    pontos = " ".join(f"{px(i):.1f},{py(v):.1f}" for i, v in enumerate(valores))
 
-    # Pontos coloridos por situação
-    for i, v in enumerate(valores):
-        ax.scatter(i, v, color=cor_por_nota(v), s=70, zorder=4,
-                   edgecolors="#0d1b2a", linewidths=1.5)
-        ax.text(i, v + 0.35, f"{v:.1f}", ha="center", va="bottom",
-                color="#e8f0f7", fontsize=9, fontweight="bold")
+    # Área preenchida (polygon)
+    area = (f"{px(0):.1f},{H-pad} " + pontos +
+            f" {px(n-1):.1f},{H-pad}")
 
     # Linha da média
-    ax.axhline(media, color="#f0c040", linestyle=":", linewidth=1.4, alpha=0.8)
-    ax.text(len(valores) - 1, media + 0.3, f"Média {media:.2f}",
-            ha="right", color="#f0c040", fontsize=8)
+    y_med = py(media)
 
-    ax.set_xticks(list(xs))
-    ax.set_xticklabels(labels)
-    ax.set_ylim(0, 11.5)
-    ax.set_yticks(range(0, 11))
-    ax.spines[:].set_visible(False)
-    ax.yaxis.grid(True, color="rgba(255,255,255,0.06)", linewidth=0.7)
-    ax.set_axisbelow(True)
-    ax.tick_params(colors=TEXT_COLOR, labelsize=9)
-    for label in ax.get_xticklabels() + ax.get_yticklabels():
-        label.set_color(TEXT_COLOR)
+    # Pontos coloridos
+    circles = ""
+    labels  = ""
+    for i, v in enumerate(valores):
+        cx, cy = px(i), py(v)
+        circles += f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="5" fill="{cor_nota(v)}" stroke="#0d1b2a" stroke-width="2"/>'
+        labels  += f'<text x="{cx:.1f}" y="{cy-10:.1f}" text-anchor="middle" fill="#e8f0f7" font-size="10" font-weight="bold">{v:.1f}</text>'
+        labels  += f'<text x="{cx:.1f}" y="{H-4:.1f}" text-anchor="middle" fill="#7a90a4" font-size="9">N{i+1}</text>'
 
-    plt.tight_layout()
-    return fig
+    svg = f"""
+    <svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+        <!-- Área -->
+        <polygon points="{area}" fill="#f0c040" fill-opacity=".08"/>
+        <!-- Linha média -->
+        <line x1="{pad}" y1="{y_med:.1f}" x2="{W-pad}" y2="{y_med:.1f}"
+              stroke="#f0c040" stroke-width="1.2" stroke-dasharray="4,3" opacity=".7"/>
+        <text x="{W-pad+2}" y="{y_med:.1f}" fill="#f0c040" font-size="9" dominant-baseline="middle">
+            {media:.2f}
+        </text>
+        <!-- Linha principal -->
+        <polyline points="{pontos}" fill="none" stroke="#f0c040" stroke-width="2.2"
+                  stroke-linejoin="round" stroke-linecap="round"/>
+        {circles}
+        {labels}
+    </svg>"""
 
-
-def grafico_gauge(media, cor_hex):
-    """Velocímetro semicircular mostrando a média."""
-    fig, ax = plt.subplots(figsize=(5, 2.8),
-                           subplot_kw=dict(polar=True))
-    fig.patch.set_facecolor(BG)
-    ax.set_facecolor(BG)
-
-    # Ângulos: π (esquerda=0) → 0 (direita=10)
-    theta_min, theta_max = np.pi, 0
-    zonas = [
-        (0,   4.0, "#ef4444"),
-        (4.0, 6.0, "#f59e0b"),
-        (6.0, 10,  "#22c55e"),
-    ]
-
-    for v_ini, v_fim, cor in zonas:
-        t0 = theta_max + (theta_min - theta_max) * (1 - v_ini / 10)
-        t1 = theta_max + (theta_min - theta_max) * (1 - v_fim / 10)
-        theta = np.linspace(t1, t0, 60)
-        # Faixa externa (anel)
-        ax.bar(x=theta, height=0.3, width=(t0 - t1) / 60,
-               bottom=0.65, color=cor, alpha=0.35, linewidth=0)
-        ax.bar(x=np.mean(theta), height=0.02, width=(t0 - t1),
-               bottom=0.93, color=cor, alpha=0.8, linewidth=0)
-
-    # Agulha
-    angulo_media = theta_max + (theta_min - theta_max) * (1 - media / 10)
-    ax.annotate("", xy=(angulo_media, 0.75),
-                xytext=(angulo_media + np.pi, 0.08),
-                arrowprops=dict(arrowstyle="-|>",
-                                color=cor_hex, lw=2.2,
-                                mutation_scale=14))
-
-    # Ponto central
-    ax.scatter([0], [0], s=60, color=cor_hex, zorder=5)
-
-    # Texto da média no centro
-    ax.text(0, -0.25, f"{media:.2f}", ha="center", va="center",
-            fontsize=22, fontweight="bold", color=cor_hex,
-            transform=ax.transData)
-    ax.text(0, -0.5, "média", ha="center", va="center",
-            fontsize=9, color=TEXT_COLOR, transform=ax.transData)
-
-    # Rótulos 0, 5, 10
-    for val, label in [(0, "0"), (5, "5"), (10, "10")]:
-        ang = theta_max + (theta_min - theta_max) * (1 - val / 10)
-        ax.text(ang, 1.08, label, ha="center", va="center",
-                fontsize=8, color=TEXT_COLOR)
-
-    ax.set_ylim(-0.6, 1.2)
-    ax.set_xlim(0, np.pi)
-    ax.set_theta_direction(-1)
-    ax.set_theta_offset(0)
-    ax.axis("off")
-    plt.tight_layout()
-    return fig
+    return f"""
+    <div class="chart-wrap">
+        <div class="chart-title">📈 Evolução das Notas</div>
+        {svg}
+    </div>"""
 
 
 # ─────────────────────────────────────────
@@ -387,7 +286,7 @@ with col2:
 # ─────────────────────────────────────────
 
 if calcular:
-    erros  = []
+    erros   = []
     valores = []
 
     erro_nome = validar_nome(nome)
@@ -406,9 +305,9 @@ if calcular:
             st.error(msg)
 
     elif valores:
-        media = sum(valores) / len(valores)
+        media    = sum(valores) / len(valores)
         classe, emoji, situacao, cor = classificar_media(media)
-        detalhe = "  ·  ".join([f"N{i+1}: {v:.1f}" for i, v in enumerate(valores)])
+        detalhe  = "  ·  ".join([f"N{i+1}: {v:.1f}" for i, v in enumerate(valores)])
         nome_fmt = nome.strip().title()
 
         # ── Card de resultado ──
@@ -424,20 +323,17 @@ if calcular:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ── Velocímetro centralizado ──
-        st.markdown("**🎯 Velocímetro da Média**")
-        st.pyplot(grafico_gauge(media, cor), use_container_width=True)
+        # ── Gauge ──
+        st.markdown(html_gauge(media, cor), unsafe_allow_html=True)
 
         # ── Barras + Linha lado a lado ──
-        col_bar, col_lin = st.columns(2)
-        with col_bar:
-            st.markdown("**📊 Notas por Avaliação**")
-            st.pyplot(grafico_barras(valores), use_container_width=True)
-        with col_lin:
-            st.markdown("**📈 Evolução das Notas**")
-            st.pyplot(grafico_linha(valores, media), use_container_width=True)
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.markdown(html_barras(valores), unsafe_allow_html=True)
+        with col_b:
+            st.markdown(html_linha(valores, media), unsafe_allow_html=True)
 
-        # ── Barra de progresso ──
+        # ── Barra de progresso nativa ──
         st.markdown("<br>", unsafe_allow_html=True)
         st.progress(media / 10, text=f"{nome_fmt} · Média {media:.2f} / 10.0")
 
@@ -449,23 +345,14 @@ if calcular:
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("""
 <div class='card'>
-    <p style='color:#7a90a4;font-size:0.78rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:0.8rem'>
+    <p style='color:#7a90a4;font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.8rem'>
         📋 Critérios de avaliação
     </p>
-    <div class='criterio'>
-        <span>✅</span>
-        <span><strong style='color:#22c55e'>Aprovado</strong> — Média ≥ 6.0</span>
-    </div>
-    <div class='criterio'>
-        <span>⚠️</span>
-        <span><strong style='color:#f59e0b'>Recuperação</strong> — 4.0 ≤ Média &lt; 6.0</span>
-    </div>
-    <div class='criterio' style='border-bottom:none'>
-        <span>❌</span>
-        <span><strong style='color:#ef4444'>Reprovado</strong> — Média &lt; 4.0</span>
-    </div>
+    <div class='criterio'><span>✅</span><span><strong style='color:#22c55e'>Aprovado</strong> — Média ≥ 6.0</span></div>
+    <div class='criterio'><span>⚠️</span><span><strong style='color:#f59e0b'>Recuperação</strong> — 4.0 ≤ Média &lt; 6.0</span></div>
+    <div class='criterio' style='border-bottom:none'><span>❌</span><span><strong style='color:#ef4444'>Reprovado</strong> — Média &lt; 4.0</span></div>
 </div>
-<p style='text-align:center;color:#2a3f55;font-size:0.75rem;margin-top:1rem'>
+<p style='text-align:center;color:#2a3f55;font-size:.75rem;margin-top:1rem'>
     Calculadora de Notas · Instituto Federal
 </p>
 """, unsafe_allow_html=True)
