@@ -1,6 +1,7 @@
 import streamlit as st
-import plotly.graph_objects as go
-import plotly.express as px
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import numpy as np
 
 # ─────────────────────────────────────────
 #  CONFIGURAÇÃO DA PÁGINA
@@ -130,24 +131,9 @@ st.markdown("""
     border-top: 1px solid rgba(255,255,255,0.07);
     margin: 1rem 0;
 }
-.grafico-titulo {
-    color: #7a90a4;
-    font-size: 0.78rem;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-}
 footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
-
-# ─────────────────────────────────────────
-#  CONFIGURAÇÃO PADRÃO DOS GRÁFICOS PLOTLY
-# ─────────────────────────────────────────
-PLOT_BG   = "rgba(0,0,0,0)"
-PAPER_BG  = "rgba(0,0,0,0)"
-FONT_COLOR = "#a0b4c8"
-GRID_COLOR = "rgba(255,255,255,0.06)"
 
 
 # ─────────────────────────────────────────
@@ -187,7 +173,7 @@ def classificar_media(media):
 
 
 def cor_por_nota(v):
-    """Retorna a cor de uma barra conforme o valor da nota."""
+    """Retorna cor conforme situação da nota."""
     if v >= 6.0:
         return "#22c55e"
     elif v >= 4.0:
@@ -196,118 +182,148 @@ def cor_por_nota(v):
 
 
 # ─────────────────────────────────────────
-#  FUNÇÕES DE GRÁFICO
+#  FUNÇÕES DE GRÁFICO (Matplotlib)
 # ─────────────────────────────────────────
 
+BG = "#0d1b2a"
+TEXT_COLOR = "#a0b4c8"
+
+
 def grafico_barras(valores):
-    """Gráfico de barras com uma barra por nota, colorida pela situação."""
+    """Gráfico de barras com uma barra por nota."""
     labels = [f"Nota {i+1}" for i in range(len(valores))]
     cores  = [cor_por_nota(v) for v in valores]
 
-    fig = go.Figure(go.Bar(
-        x=labels,
-        y=valores,
-        marker_color=cores,
-        marker_line_color="rgba(255,255,255,0.1)",
-        marker_line_width=1,
-        text=[f"{v:.1f}" for v in valores],
-        textposition="outside",
-        textfont=dict(color="#e8f0f7", size=13),
-    ))
+    fig, ax = plt.subplots(figsize=(5, 3.2))
+    fig.patch.set_facecolor(BG)
+    ax.set_facecolor(BG)
 
-    # Linha de aprovação (6.0) e recuperação (4.0)
-    fig.add_hline(y=6.0, line_dash="dash", line_color="#22c55e",
-                  annotation_text="Aprovação (6.0)", annotation_font_color="#22c55e",
-                  annotation_position="top right")
-    fig.add_hline(y=4.0, line_dash="dash", line_color="#f59e0b",
-                  annotation_text="Recuperação (4.0)", annotation_font_color="#f59e0b",
-                  annotation_position="bottom right")
+    bars = ax.bar(labels, valores, color=cores, width=0.5,
+                  edgecolor="rgba(255,255,255,0.1)", linewidth=0.8)
 
-    fig.update_layout(
-        plot_bgcolor=PLOT_BG, paper_bgcolor=PAPER_BG,
-        font=dict(color=FONT_COLOR, family="Lato"),
-        margin=dict(t=20, b=10, l=10, r=10),
-        yaxis=dict(range=[0, 11], gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        xaxis=dict(tickfont=dict(color=FONT_COLOR)),
-        showlegend=False,
-        height=300,
-    )
+    # Valor em cima de cada barra
+    for bar, v in zip(bars, valores):
+        ax.text(bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.2,
+                f"{v:.1f}", ha="center", va="bottom",
+                color="#e8f0f7", fontsize=10, fontweight="bold")
+
+    # Linhas de referência
+    ax.axhline(6.0, color="#22c55e", linestyle="--", linewidth=1.2, alpha=0.7)
+    ax.axhline(4.0, color="#f59e0b", linestyle="--", linewidth=1.2, alpha=0.7)
+    ax.text(len(valores) - 0.5, 6.15, "Aprovação", color="#22c55e", fontsize=7.5, ha="right")
+    ax.text(len(valores) - 0.5, 4.15, "Recuperação", color="#f59e0b", fontsize=7.5, ha="right")
+
+    ax.set_ylim(0, 11.5)
+    ax.set_yticks(range(0, 11))
+    ax.tick_params(colors=TEXT_COLOR, labelsize=9)
+    ax.spines[:].set_visible(False)
+    ax.yaxis.grid(True, color="rgba(255,255,255,0.06)", linewidth=0.7)
+    ax.set_axisbelow(True)
+    for label in ax.get_xticklabels() + ax.get_yticklabels():
+        label.set_color(TEXT_COLOR)
+
+    plt.tight_layout()
     return fig
 
 
-def grafico_gauge(media, cor):
-    """Velocímetro mostrando a média do aluno de 0 a 10."""
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=media,
-        number=dict(font=dict(color=cor, size=40, family="Playfair Display"), suffix=""),
-        gauge=dict(
-            axis=dict(
-                range=[0, 10],
-                tickwidth=1,
-                tickcolor=FONT_COLOR,
-                tickfont=dict(color=FONT_COLOR),
-            ),
-            bar=dict(color=cor, thickness=0.25),
-            bgcolor="rgba(255,255,255,0.03)",
-            borderwidth=0,
-            steps=[
-                dict(range=[0,   4.0], color="rgba(239,68,68,0.15)"),
-                dict(range=[4.0, 6.0], color="rgba(245,158,11,0.15)"),
-                dict(range=[6.0, 10],  color="rgba(34,197,94,0.15)"),
-            ],
-            threshold=dict(
-                line=dict(color=cor, width=3),
-                thickness=0.75,
-                value=media,
-            ),
-        ),
-    ))
-    fig.update_layout(
-        plot_bgcolor=PLOT_BG, paper_bgcolor=PAPER_BG,
-        font=dict(color=FONT_COLOR, family="Lato"),
-        margin=dict(t=20, b=10, l=20, r=20),
-        height=230,
-    )
-    return fig
-
-
-def grafico_linha(valores):
-    """Gráfico de linha mostrando a evolução das notas ao longo das avaliações."""
+def grafico_linha(valores, media):
+    """Gráfico de linha mostrando a evolução das notas."""
     labels = [f"Nota {i+1}" for i in range(len(valores))]
-    media  = sum(valores) / len(valores)
+    xs = range(len(valores))
 
-    fig = go.Figure()
+    fig, ax = plt.subplots(figsize=(5, 3.2))
+    fig.patch.set_facecolor(BG)
+    ax.set_facecolor(BG)
 
-    # Área sombreada abaixo da linha
-    fig.add_trace(go.Scatter(
-        x=labels, y=valores,
-        fill="tozeroy",
-        fillcolor="rgba(240,192,64,0.07)",
-        line=dict(color="#f0c040", width=2.5),
-        mode="lines+markers",
-        marker=dict(size=9, color=[cor_por_nota(v) for v in valores],
-                    line=dict(color="#0d1b2a", width=2)),
-        text=[f"{v:.1f}" for v in valores],
-        textposition="top center",
-        textfont=dict(color="#e8f0f7"),
-    ))
+    # Área preenchida
+    ax.fill_between(xs, valores, alpha=0.12, color="#f0c040")
+
+    # Linha principal
+    ax.plot(xs, valores, color="#f0c040", linewidth=2.2, zorder=3)
+
+    # Pontos coloridos por situação
+    for i, v in enumerate(valores):
+        ax.scatter(i, v, color=cor_por_nota(v), s=70, zorder=4,
+                   edgecolors="#0d1b2a", linewidths=1.5)
+        ax.text(i, v + 0.35, f"{v:.1f}", ha="center", va="bottom",
+                color="#e8f0f7", fontsize=9, fontweight="bold")
 
     # Linha da média
-    fig.add_hline(y=media, line_dash="dot", line_color="#f0c040", line_width=1.5,
-                  annotation_text=f"Média: {media:.2f}",
-                  annotation_font_color="#f0c040",
-                  annotation_position="top left")
+    ax.axhline(media, color="#f0c040", linestyle=":", linewidth=1.4, alpha=0.8)
+    ax.text(len(valores) - 1, media + 0.3, f"Média {media:.2f}",
+            ha="right", color="#f0c040", fontsize=8)
 
-    fig.update_layout(
-        plot_bgcolor=PLOT_BG, paper_bgcolor=PAPER_BG,
-        font=dict(color=FONT_COLOR, family="Lato"),
-        margin=dict(t=20, b=10, l=10, r=10),
-        yaxis=dict(range=[0, 11], gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        xaxis=dict(tickfont=dict(color=FONT_COLOR), gridcolor=GRID_COLOR),
-        showlegend=False,
-        height=270,
-    )
+    ax.set_xticks(list(xs))
+    ax.set_xticklabels(labels)
+    ax.set_ylim(0, 11.5)
+    ax.set_yticks(range(0, 11))
+    ax.spines[:].set_visible(False)
+    ax.yaxis.grid(True, color="rgba(255,255,255,0.06)", linewidth=0.7)
+    ax.set_axisbelow(True)
+    ax.tick_params(colors=TEXT_COLOR, labelsize=9)
+    for label in ax.get_xticklabels() + ax.get_yticklabels():
+        label.set_color(TEXT_COLOR)
+
+    plt.tight_layout()
+    return fig
+
+
+def grafico_gauge(media, cor_hex):
+    """Velocímetro semicircular mostrando a média."""
+    fig, ax = plt.subplots(figsize=(5, 2.8),
+                           subplot_kw=dict(polar=True))
+    fig.patch.set_facecolor(BG)
+    ax.set_facecolor(BG)
+
+    # Ângulos: π (esquerda=0) → 0 (direita=10)
+    theta_min, theta_max = np.pi, 0
+    zonas = [
+        (0,   4.0, "#ef4444"),
+        (4.0, 6.0, "#f59e0b"),
+        (6.0, 10,  "#22c55e"),
+    ]
+
+    for v_ini, v_fim, cor in zonas:
+        t0 = theta_max + (theta_min - theta_max) * (1 - v_ini / 10)
+        t1 = theta_max + (theta_min - theta_max) * (1 - v_fim / 10)
+        theta = np.linspace(t1, t0, 60)
+        # Faixa externa (anel)
+        ax.bar(x=theta, height=0.3, width=(t0 - t1) / 60,
+               bottom=0.65, color=cor, alpha=0.35, linewidth=0)
+        ax.bar(x=np.mean(theta), height=0.02, width=(t0 - t1),
+               bottom=0.93, color=cor, alpha=0.8, linewidth=0)
+
+    # Agulha
+    angulo_media = theta_max + (theta_min - theta_max) * (1 - media / 10)
+    ax.annotate("", xy=(angulo_media, 0.75),
+                xytext=(angulo_media + np.pi, 0.08),
+                arrowprops=dict(arrowstyle="-|>",
+                                color=cor_hex, lw=2.2,
+                                mutation_scale=14))
+
+    # Ponto central
+    ax.scatter([0], [0], s=60, color=cor_hex, zorder=5)
+
+    # Texto da média no centro
+    ax.text(0, -0.25, f"{media:.2f}", ha="center", va="center",
+            fontsize=22, fontweight="bold", color=cor_hex,
+            transform=ax.transData)
+    ax.text(0, -0.5, "média", ha="center", va="center",
+            fontsize=9, color=TEXT_COLOR, transform=ax.transData)
+
+    # Rótulos 0, 5, 10
+    for val, label in [(0, "0"), (5, "5"), (10, "10")]:
+        ang = theta_max + (theta_min - theta_max) * (1 - val / 10)
+        ax.text(ang, 1.08, label, ha="center", va="center",
+                fontsize=8, color=TEXT_COLOR)
+
+    ax.set_ylim(-0.6, 1.2)
+    ax.set_xlim(0, np.pi)
+    ax.set_theta_direction(-1)
+    ax.set_theta_offset(0)
+    ax.axis("off")
+    plt.tight_layout()
     return fig
 
 
@@ -332,24 +348,15 @@ st.markdown("<div class='subtitulo'>Instituto Federal · Avaliação de Desempen
 # ─────────────────────────────────────────
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-
 st.markdown("##### 👤 Dados do Estudante")
-nome = st.text_input(
-    "Nome completo",
-    placeholder="Ex: João da Silva",
-    key="nome_estudante"
-)
+nome = st.text_input("Nome completo", placeholder="Ex: João da Silva", key="nome_estudante")
 
 st.markdown("<hr class='divisor'>", unsafe_allow_html=True)
 st.markdown("##### 📝 Notas")
 
 notas_input = []
 for i in range(st.session_state.num_notas):
-    v = st.text_input(
-        f"Nota {i + 1}",
-        placeholder="Ex: 7.5",
-        key=f"nota_{i}"
-    )
+    v = st.text_input(f"Nota {i + 1}", placeholder="Ex: 7.5", key=f"nota_{i}")
     notas_input.append(v)
 
 if st.button("➕ Adicionar nota"):
@@ -417,20 +424,18 @@ if calcular:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ── Gráfico Gauge (velocímetro da média) ──
-        st.markdown("<p class='grafico-titulo'>🎯 Velocímetro da Média</p>", unsafe_allow_html=True)
-        st.plotly_chart(grafico_gauge(media, cor), use_container_width=True)
+        # ── Velocímetro centralizado ──
+        st.markdown("**🎯 Velocímetro da Média**")
+        st.pyplot(grafico_gauge(media, cor), use_container_width=True)
 
-        # ── Gráficos lado a lado: Barras + Linha ──
+        # ── Barras + Linha lado a lado ──
         col_bar, col_lin = st.columns(2)
-
         with col_bar:
-            st.markdown("<p class='grafico-titulo'>📊 Notas por Avaliação</p>", unsafe_allow_html=True)
-            st.plotly_chart(grafico_barras(valores), use_container_width=True)
-
+            st.markdown("**📊 Notas por Avaliação**")
+            st.pyplot(grafico_barras(valores), use_container_width=True)
         with col_lin:
-            st.markdown("<p class='grafico-titulo'>📈 Evolução das Notas</p>", unsafe_allow_html=True)
-            st.plotly_chart(grafico_linha(valores), use_container_width=True)
+            st.markdown("**📈 Evolução das Notas**")
+            st.pyplot(grafico_linha(valores, media), use_container_width=True)
 
         # ── Barra de progresso ──
         st.markdown("<br>", unsafe_allow_html=True)
